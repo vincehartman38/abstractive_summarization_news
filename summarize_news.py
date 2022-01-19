@@ -3,6 +3,10 @@ import requests
 from bs4 import BeautifulSoup
 import random
 
+# Load the model and tokenizer
+model = BartForConditionalGeneration.from_pretrained('facebook/bart-large-cnn')
+tokenizer = BartTokenizer.from_pretrained('facebook/bart-large-cnn')
+
 # Pull a random Top news article for today from CNN at http://lite.cnn.com/en
 def get_random_article():
   re = requests.get('http://lite.cnn.com/en')
@@ -30,17 +34,18 @@ def get_text_article(url):
       ARTICLE_TO_SUMMARIZE.append(x.string)
   return TITLE[0].string, " ".join(ARTICLE_TO_SUMMARIZE)
 
-# Load the model and tokenizer
-model = BartForConditionalGeneration.from_pretrained('facebook/bart-large-cnn')
-tokenizer = BartTokenizer.from_pretrained('facebook/bart-large-cnn')
+# Generate the Predicted Summary
+def predict_summary(ARTICLE_TO_SUMMARIZE, model, tokenizer):
+  inputs = tokenizer([ARTICLE_TO_SUMMARIZE], max_length=1024, return_tensors='pt')
+  summary_ids = model.generate(inputs['input_ids'], num_beams=4, max_length=150, early_stopping=True)
+  PRED = [tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=False) for g in summary_ids][0]
+  return PRED
 
+
+# Generate the Predictive Summay from CNN News Article
 article_url = 'http://lite.cnn.com' + str(get_random_article())
 TITLE, ARTICLE_TO_SUMMARIZE = get_text_article(article_url)
-
-# Generate the Predicted Summary
-inputs = tokenizer([ARTICLE_TO_SUMMARIZE], max_length=1024, return_tensors='pt')
-summary_ids = model.generate(inputs['input_ids'], num_beams=4, max_length=150, early_stopping=True)
-PRED = [tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=False) for g in summary_ids][0]
+PRED = predict_summary(ARTICLE_TO_SUMMARIZE, model, tokenizer)
 
 # print summarization
 print('Original Article Link:', article_url)
