@@ -43,7 +43,7 @@ summary_ids = model.generate(inputs['input_ids'], num_beams=4, max_length=150, e
 PRED = [tokenizer.decode(g, skip_special_tokens=True, clean_up_tokenization_spaces=False) for g in summary_ids][0]
 
 # print summarization
-print('Original Article Link: article_url)
+print('Original Article Link:', article_url)
 print('TITLE: ',TITLE)
 print('AUTOMATED ABSTRACTIVE SUMMARY:')
 print(PRED.replace('. ', '.\n'))
